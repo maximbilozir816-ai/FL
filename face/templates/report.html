@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@page default_metric_page { size: 210mm 150mm; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #040710; color: #E2E8F0; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+
+.page { 
+    page: default_metric_page; 
+    width: 210mm; 
+    height: 150mm; 
+    padding: 16mm; 
+    display: block; 
+    position: relative; 
+    box-sizing: border-box;
+    page-break-after: always;
+    background: #040710;
+}
+
+.header-table { display: table; width: 100%; margin-bottom: 3mm; table-layout: fixed; }
+.header-cell-left { display: table-cell; text-align: left; vertical-align: baseline; }
+.header-cell-right { display: table-cell; text-align: right; vertical-align: baseline; width: 30mm; }
+
+h1 { font-size: 20pt; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; margin: 0; }
+.pgnum { color: #FFFFFF; font-size: 10pt; white-space: nowrap; }
+.rule { height: 1px; background: #1E293B; margin-bottom: 5mm; clear: both; }
+
+/* СТИЛІ ДЛЯ СТАНДАРТНИХ СТОРІНОК МЕТРИК */
+.body { display: table; width: 178mm; height: 95mm; table-layout: fixed; }
+.img-wrap { display: table-cell; width: 70mm; height: 95mm; vertical-align: top; }
+.img-wrap img { width: 70mm; height: 95mm; border-radius: 0px; display: block; margin: 0; padding: 0; object-fit: cover; }
+
+/* БЛОК ДАНИХ СПРАВА */
+.data-col { display: table-cell; width: 108mm; padding-left: 9mm; vertical-align: top; }
+
+.lbl { font-size: 15pt; font-weight: 700; letter-spacing: 1.3px; color: #64748B; text-transform: uppercase; margin-bottom: 2mm; margin-top: 4mm; }
+.score-row { margin-bottom: 4mm; line-height: 1; }
+.score-n { font-size: 38pt; font-weight: 800; color: #FFFFFF; }
+.score-d { font-size: 18pt; color: #64748B; font-weight: 600; }
+.bar-track { width: 100%; height: 14px; background: #232a3b; border-radius: 0px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 0px; }
+
+.gap-m { height: 9mm; }
+.gap-s { height: 5.5mm; }
+
+.ratio-v { font-size: 26pt; font-weight: 700; }
+.ideal-v { font-size: 22pt; font-weight: 400; color: #FFFFFF; }
+.sep { height: 1px; background: #1A1A2E; margin: 6mm 0; }
+
+/* ФУТЕР */
+.footer-bot { position: absolute; bottom: 16mm; left: 16mm; font-size: 9pt; color: #64748B; }
+.footer-bot a { color: #3B82F6; text-decoration: none; font-weight: bold; position: relative; z-index: 999; }
+.footer-bot a:hover { color: #60A5FA; }
+</style>
+</head>
+<body>
+
+{% for page in pages %}
+    {% set show_counter = loop.index >= 4 and loop.index <= 28 %}
+    {% set current_page = loop.index - 3 %}
+    {% set total_main_pages = 25 %}
+
+    {% if page.is_overview %}
+        {% set page_num_str = "%02d"|format(current_page) if show_counter else "" %}
+        {{ page.ctx.render_html(page_num_str=page_num_str, total_pages=total_main_pages) | safe }}
+    {% else %}
+        {% set is_special = page.metrics and page.metrics[0].metric_key in ['facial_index', 'fifths', 'thirds'] %}
+        {% set is_nose = page.metrics and page.metrics[0].metric_key in ['nose_height', 'nose_to_lips', 'nose_width', 'fwhr', 'jaw_facew', 'chin_lowerth'] %}
+        
+        <div class="page">
+          
+          <div class="header-table">
+            <div class="header-cell-left">
+              {% if page.is_eye_overall %}
+                  <h1 style="font-size: 16pt; font-weight: 700; margin: 0;">
+                      <span style="color: {{ page.theme_color }};">Eye Area — Overall Impression</span> 
+                      <span style="color: #FFFFFF; margin-left: 12px; font-size: 28pt; font-weight: bold;">{{ page.eye_avg_score }}</span>
+                  </h1>
+              {% else %}
+                  <h1 style="color: {{ page.theme_color }};">{{ page.title }}</h1>
+              {% endif %}
+            </div>
+            <div class="header-cell-right">
+              {% if show_counter %}
+              <span class="pgnum">{{ "%02d"|format(current_page) }}&nbsp;/&nbsp;{{ "%02d"|format(total_main_pages) }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="rule"></div>
+          
+          {% if is_special %}
+              {% include 'special_metrics_block.html' %}
+          {% elif is_nose %}
+              {% include 'nose_metrics.html' %}
+          {% else %}
+              <div class="body">
+                {% if not page.is_eye_overall %}
+                <div class="img-wrap">
+                  <img src="{{ page.img_src }}" style="border: 2px solid {{ page.theme_color }};">
+                </div>
+                {% endif %}
+                
+                <div class="data-col" {% if page.is_eye_overall %}style="width: 178mm; padding-left: 0;"{% endif %}>
+                  {% for m in page.metrics %}
+                    {% if not loop.first %}<div class="sep"></div>{% endif %}
+                    
+                    {% if m.score %}
+                    <p class="lbl">METRIC SCORE</p>
+                    <div class="score-row">
+                      <span class="score-n">{{ m.score }}</span><span class="score-d">&nbsp;/ 10</span>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill" style="width:{{ m.pct }}%; background: {{ page.theme_color }};"></div></div>
+                    <div class="gap-m"></div>
+                    {% endif %}
+                    
+                    <p class="lbl">{{ m.label }}</p>
+                    <p class="ratio-v" style="color: {{ page.theme_color }};">{{ m.value }}</p>
+                    
+                    {% if m.ideal %}
+                    <div class="gap-s"></div>
+                    <p class="lbl">IDEAL</p>
+                    <p class="ideal-v">{{ m.ideal }}</p>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+          {% endif %}
+
+          <div class="footer-bot" {% if is_special or is_nose %}style="left: auto; right: 16mm;"{% endif %}>
+            Telegram: <a href="https://t.me/bp_guide_scoringAI_bot" target="_blank">@bp_guide_scoringAI_bot</a>
+          </div>
+
+        </div>
+    {% endif %}
+{% endfor %}
+
+</body>
+</html>

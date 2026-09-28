@@ -1,0 +1,39 @@
+<style>
+/* Локальні стилі сітки для метрик носа (текст зліва, фото справа) */
+.nm-body { display: table; width: 178mm; height: 95mm; table-layout: fixed; }
+.nm-data-col { display: table-cell; width: 108mm; vertical-align: top; padding-right: 9mm; }
+.nm-img-wrap { display: table-cell; width: 70mm; vertical-align: top; }
+.nm-img-wrap img { width: 70mm; height: 95mm; display: block; object-fit: cover; }
+</style>
+
+<div class="nm-body">
+    <div class="nm-data-col">
+      {% for m in page.metrics %}
+        {% if not loop.first %}<div class="sep"></div>{% endif %}
+        
+        {% if m.score %}
+        <p class="lbl">METRIC SCORE</p>
+        <div class="score-row">
+          <span class="score-n">{{ m.score }}</span><span class="score-d">&nbsp;/ 10</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:{{ m.pct }}%; background: {{ page.theme_color }};"></div>
+        </div>
+        <div class="gap-m"></div>
+        {% endif %}
+        
+        <p class="lbl">{{ m.label }}</p>
+        <p class="ratio-v" style="color: {{ page.theme_color }};">{{ m.value }}</p>
+        
+        {% if m.ideal %}
+        <div class="gap-s"></div>
+        <p class="lbl">IDEAL</p>
+        <p class="ideal-v">{{ m.ideal }}</p>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="nm-img-wrap">
+      <img src="{{ page.img_src }}" style="border: 2px solid {{ page.theme_color }};">
+    </div>
+</div>

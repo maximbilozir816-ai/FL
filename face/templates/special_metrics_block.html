@@ -1,0 +1,148 @@
+<style>
+/* Таблична верстка для ідеальної сумісності з WeasyPrint */
+.sp-body { 
+    display: table; 
+    width: 178mm; 
+    height: 95mm; 
+    table-layout: fixed; 
+}
+
+.sp-data-col { 
+    display: table-cell; 
+    width: 108mm; 
+    vertical-align: top; 
+    padding-right: 9mm; 
+}
+
+.sp-img-wrap { 
+    display: table-cell; 
+    width: 70mm; 
+    vertical-align: top; 
+}
+
+.sp-img-wrap img { 
+    width: 70mm; 
+    height: 95mm; 
+    display: block; 
+    object-fit: cover; 
+    border-radius: 0px;
+    margin: 0; 
+    padding: 0;
+}
+
+/* Тексти та заголовки */
+.sp-lbl { 
+    font-size: 14pt; 
+    font-weight: 700; 
+    letter-spacing: 1.3px; 
+    color: #64748B; 
+    text-transform: uppercase; 
+    margin-bottom: 2mm; 
+    margin-top: 4mm;
+}
+
+.sp-score-row { 
+    margin-bottom: 3.5mm; 
+    line-height: 1; 
+}
+
+.sp-score-n { font-size: 38pt; font-weight: 800; color: #FFFFFF; }
+.sp-score-d { font-size: 18pt; color: #64748B; font-weight: 600; }
+
+.sp-bar-track { 
+    width: 100%; 
+    height: 14px; 
+    background: #232a3b; 
+    border-radius: 0px; 
+    overflow: hidden; 
+    margin-bottom: 5mm; 
+}
+.sp-bar-fill { 
+    height: 100%; 
+    border-radius: 0px; 
+}
+
+/* Таблиця всередині блоку */
+.sp-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 2mm; 
+    table-layout: fixed; 
+}
+
+.sp-table th { 
+    font-size: 12pt; 
+    font-weight: 700; 
+    color: #64748B; 
+    border-bottom: 1px dashed #334155; /* Пунктирна лінія під шапкою */
+    padding-bottom: 3mm; 
+    text-transform: uppercase; 
+    vertical-align: middle; 
+    letter-spacing: 1px;
+}
+
+.sp-table td { 
+    border-bottom: 1px dashed #334155; /* Пунктирні лінії між відсотками */
+}
+
+.sp-table tr:last-child td { 
+    border-bottom: none; 
+}
+
+.td-part { font-size: 16pt; font-weight: 600; color: #E2E8F0; text-align: left; width: 40%; }
+.td-val { font-size: 16pt; font-weight: 700; text-align: center; width: 30%; }
+.td-ideal { font-size: 16pt; font-weight: 600; color: #94A3B8; text-align: right; width: 30%; }
+</style>
+
+<div class="sp-body">
+    <div class="sp-data-col">
+        
+        {% set m_key = page.metrics[0].metric_key if page.metrics else '' %}
+        {% set first_col_title = 'THIRDS' if m_key == 'thirds' else ('FIFTHS' if m_key == 'fifths' else 'INDEX') %}
+        
+        <p class="sp-lbl" {% if m_key == 'facial_index' %}style="margin-top: 12mm;"{% endif %}>METRIC SCORE</p>
+        
+        <div class="sp-score-row">
+            <span class="sp-score-n">{{ page.metrics[0].score }}</span><span class="sp-score-d">&nbsp;/ 10</span>
+        </div>
+        
+        <div class="sp-bar-track">
+            <div class="sp-bar-fill" style="width:{{ page.metrics[0].pct }}%; background: {{ page.theme_color }};"></div>
+        </div>
+        
+        <table class="sp-table" {% if m_key == 'facial_index' %}style="margin-top: 14mm;"{% endif %}>
+            <thead>
+                <tr>
+                    <th style="text-align: left;">{{ first_col_title }}</th>
+                    <th style="text-align: center;">YOUR<br>RATIO</th>
+                    <th style="text-align: right;">IDEAL<br>RATIO</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if page.metrics|length > 3 %}
+                    {% set pad_top = '3mm' %}
+                    {% set pad_bot = '3mm' %}
+                {% elif m_key == 'facial_index' %}
+                    {% set pad_top = '6mm' %} 
+                    {% set pad_bot = '6mm' %} 
+                {% else %}
+                    {% set pad_top = '4.5mm' %}
+                    {% set pad_bot = '4.5mm' %}
+                {% endif %}
+                
+                {% for m in page.metrics %}
+                <tr>
+                    <td class="td-part" style="padding-top: {{ pad_top }}; padding-bottom: {{ pad_bot }};">{{ m.label }}</td>
+                    <td class="td-val" style="color: {{ page.theme_color }}; padding-top: {{ pad_top }}; padding-bottom: {{ pad_bot }};">{{ m.value }}</td>
+                    <td class="td-ideal" style="padding-top: {{ pad_top }}; padding-bottom: {{ pad_bot }};">{% if '%' in m.ideal %}{{ m.ideal }}{% else %}{{ m.ideal|float|int }}%{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+    </div>
+
+    <div class="sp-img-wrap">
+        <img src="{{ page.img_src }}" style="border: 2px solid {{ page.theme_color }};">
+    </div>
+</div>
